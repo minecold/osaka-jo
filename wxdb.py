@@ -3,13 +3,16 @@
 import redis
 import time
 
-merc_list = ['', 'ccss', 'bt8']
+merc_list = ['', 'ccss', 'bt8y']
 
 class wxdb:
 	def __init__(self, merc, open_id):
+		self.user = "%s:%s" % ('user', open_id)
 		if merc in merc_list :
 			self.rd = redis.StrictRedis(db=merc_list.index(merc))
-			self.user = "%s:%s" % ('user', open_id)
+		else:
+			"""db 0 is THE NULL"""
+			self.rd = redis.StrictRedis(db=0)
 
 	def pull(self):
 		return str(self.rd.keys())

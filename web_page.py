@@ -55,16 +55,16 @@ class web_page:
 			telephone = msg['telephone']
 			gender = msg['gender']
 		except IndexError:
-			return self.page_signup()
+			return 'e_code=1'
 
 		if db.has_user() :
 			return self.page_member(open_id)
 		else:
 			re = db.create_user(name = user_name, tel = telephone, gend = gender)
 			if re :
-				return self.page_member(open_id)
+				return 'e_code=0'
 			else:
-				return self.page_signup()
+				return 'e_code=1'
             else:
                 return ''
         elif self.query['action'] == 'get_card':

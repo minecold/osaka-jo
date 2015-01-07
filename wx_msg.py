@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#! -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import xml.dom.minidom as md
 import time
@@ -47,17 +47,6 @@ def wx_msg_text(roger):
 	except KeyError:
 		return ''
 
-	if reply == 'reg':
-		db = wxdb.wxdb()
-		re = db.query(gen_dict['ToUserName'])
-		if re == 'BYE':
-			reply = 'You have already been registed.'
-		elif re == 'OK':
-			reply = 'Your request is done.'
-
-	if reply == 'regpull':
-		db = wxdb.wxdb()
-		reply = db.pull()
 	gen_dict['Content'] = reply
 	gen_dict['CreateTime'] = str(int(time.time()))
 
