@@ -1,7 +1,12 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import re
+import ast
+
 import wxdb
+
+import merc_data
 
 # It's better to set the absolutely sys path
 PAGE_PATH = '/srv/www/mp.wx/web_pages/'
@@ -42,8 +47,8 @@ class web_page:
                 """
                 generate sign up page for user as they requested
                 """
-                if db.has_user():
-                    return self.page_member(open_id)
+                if db.has_key():
+                    return self.page_member(db_key)
                 return self.page_signup()
             elif self.r_method == 'POST':
                 """
@@ -56,18 +61,15 @@ class web_page:
 			telephone = msg['telephone']
 			gender = msg['gender']
 		except IndexError:
-			return 'e_code=1'
+			return '0'
 
-		if db.has_user() :
-			return self.page_member(open_id)
+		if db.has_key() :
+			return '1'
 		else:
-			re = db.create_user(name = user_name, tel = telephone, gend = gender)
-			if re :
-				return 'e_code=0'
-			else:
-				return 'e_code=1'
+			db.create_user(name = user_name, tel = telephone, gend = gender)
+			return '1'
             else:
-                return ''
+                return '1'
         elif self.query['action'] == 'get_card':
             pass
 
@@ -79,9 +81,25 @@ class web_page:
 
         return out
 
-    def page_member(self, open_id):
+    def page_member(self, key):
         fp = PAGE_PATH + 'member.html'
         with open(fp) as f:
             out = f.read()
+
+        try:
+            minfo = merc_data.merc[self.merc]
+        except KeyError:
+            return ''
+
+        db = wxdb.wxdb(self.merc, key)
+        uinfo = ast.literal_eval(db.get_user())
+
+        name = minfo['name']
+        uname = name.encode("utf-8")
+
+        out = out.replace('[[memid]]', uinfo['number'])
+        out = out.replace('[[name]]', uname)
+        out = out.replace('[[tel]]', minfo['tel'])
+        out = out.replace('[[loc]]', minfo['loc'])
 
         return out

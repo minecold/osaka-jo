@@ -6,7 +6,7 @@ import time
 merc_list = ['', 'ccss', 'bt8y']
 
 class wxdb:
-	def __init__(self, merc='', key):
+	def __init__(self, merc='', key=''):
 		self.key = key
 		if merc in merc_list :
 			self.rd = redis.StrictRedis(db=merc_list.index(merc))
@@ -27,6 +27,8 @@ class wxdb:
 		info['gend'] = gend
 		info['date'] = time.strftime("%I:%M:%S-%d/%m/%y:%z")
 		
+                no = self.rd.dbsize()
+                info['number'] = str(no + 68000001)
 		self.rd.set(self.key, info)
 
 	def create_token(self, atoken, etime):

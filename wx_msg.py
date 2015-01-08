@@ -141,4 +141,4 @@ def wx_msg_news_member(merc, roger):
 	pic = 'http://www.yourdomainname.com/static/img/card_bg01.png'
 	url = "http://www.yourdomainname.com/web_pages_r/%s?protocol=user&open_id=%s&action=signup" % (merc, roger['FromUserName'])
 
-	wx_msg_news(roger, title = title, desc = desc, pic = pic, url = url)
+	return wx_msg_news(roger, title = title, desc = desc, pic = pic, url = url)
