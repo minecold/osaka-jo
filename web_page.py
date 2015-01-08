@@ -35,7 +35,8 @@ class web_page:
     def webpage_user(self):
         if self.query['action'] == 'signup':
             open_id = self.query['open_id']
-            db = wxdb.wxdb(self.merc, open_id)
+            db_key = "%s:%s" % ('user', open_id)
+            db = wxdb.wxdb(self.merc, db_key)
 
             if self.r_method == 'GET':
                 """
