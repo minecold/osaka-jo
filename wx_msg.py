@@ -3,8 +3,11 @@
 
 import xml.dom.minidom as md
 import time
+import ast
+import urllib
 
 import wxdb
+import wx_service
 
 rx_tag_list = ['ToUserName', 'FromUserName', 'CreateTime', 'MsgType', 'Content', 'MsgId']
 tx_tag_list = ['ToUserName', 'FromUserName', 'CreateTime', 'MsgType']
@@ -32,9 +35,11 @@ def wx_msg(merc, msg):
 			pass
 
 	if rx_dict['Content'] in ['1','2']:
-		return wx_msg_news(merc,rx_dict)
+		""" show the member page """
+		return wx_msg_news_member(merc,rx_dict)
 	else:
 		return wx_msg_text(rx_dict)
+		#ws.ws_textmsg(merc, rx_dict['FromUserName'], 'service online.')
 
 def wx_msg_text(roger):
 	"""
@@ -54,7 +59,7 @@ def wx_msg_text(roger):
 
 	return generate_xml(gen_dict)
 
-def wx_msg_news(merc,roger):
+def wx_msg_news(roger, title='', desc='', pic='', url=''):
 	"""
 	should check Content
 	"""
@@ -68,10 +73,9 @@ def wx_msg_news(merc,roger):
 
 	gen_dict['MsgType'] = 'news'
 	gen_dict['ArticleCount'] = '1'
-	gen_dict['Title'] = u'微信VIP会员卡'
-	gen_dict['Description'] = u'点击进入微信会员中心'
-	gen_dict['PicUrl'] = 'http://www.yourdomainname.com/static/img/card_bg01.png'
-	url = "http://www.yourdomainname.com/web_pages_r/%s?protocol=user&open_id=%s&action=signup" % (merc, gen_dict['ToUserName'])
+	gen_dict['Title'] = title 
+	gen_dict['Description'] = desc
+	gen_dict['PicUrl'] = pic 
 	gen_dict['Url'] = url
 
 	return generate_xml(gen_dict)
@@ -132,3 +136,22 @@ def generate_xml(d):
 		""" FIXME """
 		pass
 	return dom.toxml(encoding='utf-8')
+
+def wx_msg_news_member(merc, roger):
+	title = u'微信VIP会员卡'
+	desc = u'点击进入微信会员中心'
+	pic = 'http://www.yourdomainname.com/static/img/card_bg01.png'
+	url = "http://www.yourdomainname.com/web_pages_r/%s?protocol=user&open_id=%s&action=signup" % (merc, roger['FromUserName'])
+
+        db = wxdb.wxdb(merc = merc, key = 'user:'+roger['FromUserName'])
+        if db.has_key():
+            uinfo = ast.literal_eval(db.get_user())
+            uname = uinfo['name']
+            gen = uinfo['gend']
+            if gen == '1':
+                desc = '%s %s\n%s' % (uname,u'先生，您好！', desc)
+            elif gen == '2':
+                desc = '%s %s\n%s' % (uname, u'女士 您好！', desc)
+
+
+	return wx_msg_news(roger, title = title, desc = desc, pic = pic, url = url)

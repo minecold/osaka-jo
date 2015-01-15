@@ -6,8 +6,8 @@ import time
 merc_list = ['', 'ccss', 'bt8y']
 
 class wxdb:
-	def __init__(self, merc, open_id):
-		self.user = "%s:%s" % ('user', open_id)
+	def __init__(self, merc='', key=''):
+		self.key = key
 		if merc in merc_list :
 			self.rd = redis.StrictRedis(db=merc_list.index(merc))
 		else:
@@ -17,8 +17,10 @@ class wxdb:
 	def pull(self):
 		return str(self.rd.keys())
 		
-	def has_user(self):
-		return self.rd.get(self.user)
+	def has_key(self, key=''):
+            if key == '':
+                key = self.key
+	    return self.rd.get(key)
 
 	def create_user(self, name, tel, gend):
 		info = {}
@@ -27,4 +29,18 @@ class wxdb:
 		info['gend'] = gend
 		info['date'] = time.strftime("%I:%M:%S-%d/%m/%y:%z")
 		
-		self.rd.set(self.user, info)
+                no = self.rd.dbsize()
+                info['number'] = str(no + 68000001)
+		self.rd.set(self.key, info)
+
+	def create_token(self, atoken, etime):
+		self.rd.set(self.key, atoken)
+		self.rd.expire(self.key, int(etime))
+
+	def get_token(self):
+		return self.rd.get(self.key)
+
+	def get_user(self, key=''):
+            if key == '':
+                key = self.key
+	    return self.rd.get(key)
