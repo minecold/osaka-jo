@@ -3,6 +3,7 @@
 
 import re
 import ast
+import urllib
 
 import wxdb
 
@@ -34,6 +35,8 @@ class web_page:
     def webpage_gen(self):
         if self.query['protocol'] == 'user':
             return self.webpage_user()
+        elif self.query['protocol'] == 'merc':
+            return self.webpage_merc()
         else:
             return ''
 
@@ -57,7 +60,7 @@ class web_page:
                 f_data = self.env['wsgi.input'].read()
 		msg = check_get(f_data)
 		try:
-			user_name = msg['username']
+			user_name = urllib.unquote(msg['username']).decode('utf-8')
 			telephone = msg['telephone']
 			gender = msg['gender']
 		except IndexError:
@@ -72,6 +75,12 @@ class web_page:
                 return '1'
         elif self.query['action'] == 'get_card':
             pass
+
+    def webpage_merc(self):
+        if self.query['action'] == 'reserv':
+            return self.page_reserv()
+        else:
+            return ''
 
     def page_signup(self):
         fp = PAGE_PATH + 'signup.html'
@@ -101,5 +110,12 @@ class web_page:
         out = out.replace('[[name]]', uname)
         out = out.replace('[[tel]]', minfo['tel'])
         out = out.replace('[[loc]]', minfo['loc'])
+
+        return out
+
+    def page_reserv(self):
+        fp = PAGE_PATH + 'reservation.html'
+        with open(fp) as f:
+            out = f.read()
 
         return out

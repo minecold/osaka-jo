@@ -3,6 +3,8 @@
 
 import xml.dom.minidom as md
 import time
+import ast
+import urllib
 
 import wxdb
 import wx_service
@@ -140,5 +142,16 @@ def wx_msg_news_member(merc, roger):
 	desc = u'点击进入微信会员中心'
 	pic = 'http://www.yourdomainname.com/static/img/card_bg01.png'
 	url = "http://www.yourdomainname.com/web_pages_r/%s?protocol=user&open_id=%s&action=signup" % (merc, roger['FromUserName'])
+
+        db = wxdb.wxdb(merc = merc, key = 'user:'+roger['FromUserName'])
+        if db.has_key():
+            uinfo = ast.literal_eval(db.get_user())
+            uname = uinfo['name']
+            gen = uinfo['gend']
+            if gen == '1':
+                desc = '%s %s\n%s' % (uname,u'先生，您好！', desc)
+            elif gen == '2':
+                desc = '%s %s\n%s' % (uname, u'女士 您好！', desc)
+
 
 	return wx_msg_news(roger, title = title, desc = desc, pic = pic, url = url)

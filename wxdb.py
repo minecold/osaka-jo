@@ -17,8 +17,10 @@ class wxdb:
 	def pull(self):
 		return str(self.rd.keys())
 		
-	def has_key(self):
-		return self.rd.get(self.key)
+	def has_key(self, key=''):
+            if key == '':
+                key = self.key
+	    return self.rd.get(key)
 
 	def create_user(self, name, tel, gend):
 		info = {}
@@ -38,5 +40,7 @@ class wxdb:
 	def get_token(self):
 		return self.rd.get(self.key)
 
-	def get_user(self):
-		return self.rd.get(self.key)
+	def get_user(self, key=''):
+            if key == '':
+                key = self.key
+	    return self.rd.get(key)
