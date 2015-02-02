@@ -4,13 +4,15 @@
 import re
 import ast
 import urllib
+import json
 
-import wxdb
+from mpWx import wxdb
 
 import merc_data
 
 # It's better to set the absolutely sys path
 PAGE_PATH = '/srv/www/mp.wx/web_pages/'
+MERC_DATA = '/srv/www/mp.wx/application/meta/merc_data.json'
 
 def check_get(data):
     d={}
@@ -96,7 +98,7 @@ class web_page:
             out = f.read()
 
         try:
-            minfo = merc_data.merc[self.merc]
+            minfo = json.load(file(MERC_DATA))[self.merc]
         except KeyError:
             return ''
 
@@ -105,11 +107,13 @@ class web_page:
 
         name = minfo['name']
         uname = name.encode("utf-8")
+        utel = minfo['tel'].encode("utf-8")
+        uloc = minfo['loc'].encode("utf-8")
 
         out = out.replace('[[memid]]', uinfo['number'])
         out = out.replace('[[name]]', uname)
-        out = out.replace('[[tel]]', minfo['tel'])
-        out = out.replace('[[loc]]', minfo['loc'])
+        out = out.replace('[[tel]]', utel)
+        out = out.replace('[[loc]]', uloc)
 
         return out
 
