@@ -3,31 +3,33 @@
 
 import wxdb
 import urllib2
+import json
+
+MERC_DATA = '/srv/www/mp.wx/application/meta/merc_data.json'
 
 def get_mercinfo(merc):
-    with open('./merc.data') as f:
-        for line in f.readline():
-            if merc in line:
-                return list(line)[1], list(line)[2]
+    minfo = json.load(file(MERC_DATA))[merc]
+
+    if minfo:
+        return minfo['appid'], minfo['appsecret']
 
     return None,None
     
-def ws_get_atoken(merc):
+def wx_get_atoken(merc):
     appid, secret = get_mercinfo(merc)
 
     if appid and secret:
-        client_c = 'wx' + merc
-        url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=%s&appid=%s&secret=%s" % (client_c, appid, secret)
+        url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s" % (appid, secret)
         msg = urllib2.urlopen(url).read()
-        md = dict(msg)
+        md = json.loads(msg)
 
         if 'access_token' in md:
             return md['access_token'],md['expires_in']
         else:
             return None,None
 
-def ws_set_atoken(merc):
-    atoken, etime = ws_get_atoken(merc)
+def wx_set_atoken(merc):
+    atoken, etime = wx_get_atoken(merc)
 
     if atoken and etime:
         db_key = 'merc:' + merc
@@ -38,14 +40,18 @@ def ws_set_atoken(merc):
     else:
         return None
 
-def ws_get_atoken(merc):
+def wx_token(merc):
     db_key = 'merc:' + merc
     db = wxdb.wxdb(db_key)
 
     token = db.get_token()
 
     if not token:
-        token = ws_set_atoken(merc)
+        token = wx_set_atoken(merc)
 
     return token
 
+if __name__ == '__main__':
+    import sys
+    m = sys.argv[1]
+    print(wx_token(m))

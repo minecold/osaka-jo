@@ -4,13 +4,13 @@
 import re
 import ast
 import urllib
+import json
 
 import wxdb
 
-import merc_data
-
 # It's better to set the absolutely sys path
 PAGE_PATH = '/srv/www/mp.wx/web_pages/'
+MERC_DATA = '/srv/www/mp.wx/applicaton/meta/merc_data.json'
 
 def check_get(data):
     d={}
@@ -96,7 +96,7 @@ class web_page:
             out = f.read()
 
         try:
-            minfo = merc_data.merc[self.merc]
+            minfo = json.load(file(MERC_DATA))[self.merc]
         except KeyError:
             return ''
 
