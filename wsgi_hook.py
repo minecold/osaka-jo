@@ -3,8 +3,8 @@
 import os
 import sys
 
-import cert_dev
-import wx_msg
+from mpWx import cert_dev
+from mpWx import wx_msg
 
 import web_page
 
