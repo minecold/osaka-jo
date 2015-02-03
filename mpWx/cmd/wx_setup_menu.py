@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import urllib2
-import wx_token
+from mpWx import wx_token
 
 SERVER_URL = 'https://api.weixin.qq.com/cgi-bin/menu/create?access_token=%s'
 
-def setup_menu(merc, menu):
+def wx_setup_menu(merc, menu):
     token = wx_token.wx_token(merc)
     if token:
         url = SERVER_URL % token 
@@ -24,5 +24,5 @@ if __name__ == '__main__':
     with open(u) as f:
         msg = f.read()
 
-    print(setup_menu(m, msg))
+    print(wx_setup_menu(m, msg))
 
