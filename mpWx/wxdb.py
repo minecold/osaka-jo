@@ -3,7 +3,7 @@
 import redis
 import time
 
-merc_list = ['', 'ccss', 'bt8y']
+merc_list = ['', 'ccss', 'bt8y', 'prosit', 'cha0s']
 
 class wxdb:
 	def __init__(self, merc='', key=''):

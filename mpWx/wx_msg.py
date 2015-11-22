@@ -5,11 +5,17 @@ import xml.dom.minidom as md
 import time
 import ast
 import urllib
+import json
+from mstranslator import Translator
+import requests
 
 import wxdb
-import wx_service
 
-rx_tag_list = ['ToUserName', 'FromUserName', 'CreateTime', 'MsgType', 'Content', 'MsgId']
+import wx_service
+import wx_token
+
+rx_tag_list_full = ['ToUserName', 'FromUserName', 'CreateTime', 'MsgType', 'Content', 'MsgId', 'Event', 'EventKey']
+rx_tag_list = ['ToUserName', 'FromUserName', 'CreateTime', 'MsgType', 'Content', 'MediaId']
 tx_tag_list = ['ToUserName', 'FromUserName', 'CreateTime', 'MsgType']
 
 text_tag_d = {'Content':''}
@@ -34,12 +40,29 @@ def wx_msg(merc, msg):
 		except IndexError:
 			pass
 
-	if rx_dict['Content'] in ['1','2']:
-		""" show the member page """
-		return wx_msg_news_member(merc,rx_dict)
-	else:
-		return wx_msg_text(rx_dict)
+        """
+        try:
+            if rx_dict['Event'] == 'CLICK':
+                if rx_dict['EventKey'] == 'member':
+                    return wx_msg_news_member(merc, rx_dict)
+
+        except KeyError:
+            pass
+        """
+        try:
+            if rx_dict['MsgType'] == 'text':
+	        if rx_dict['Content'] in ['1','2','8']:
+	    	    """ show the member page """
+	    	    return wx_msg_news_member(merc,rx_dict)
+                else:
+	            return wx_msg_text(rx_dict)
+            elif rx_dict['MsgType'] == 'voice':
+                return wx_msg_voice(rx_dict, merc)
+            else:
+                return;
 		#ws.ws_textmsg(merc, rx_dict['FromUserName'], 'service online.')
+        except KeyError:
+            pass
 
 def wx_msg_text(roger):
 	"""
@@ -52,9 +75,58 @@ def wx_msg_text(roger):
 	except KeyError:
 		return ''
 
+        if reply[0] == '?':
+            r = requests.get('http://www.microsofttranslator.com/dictionary.ashx?from=en&to=zh-CHS&text=%s' % (reply[1:]))
+            reply = urllib.unquote(r.text.encode('utf-8')).decode('utf-8')
+            reply = reply.replace('(decodeURIComponent("', '')
+            reply = reply.replace('<span class="dictB">', '<*>')
+            reply = reply.replace('</span>', '')
+            reply = reply.replace('<br />', '\n')
+        elif reply[0] == '!':
+            translator = Translator('kylewang', 'R9nZ+mKTzSfFsB2nC2q+Owh1iRTuYaVAGiUXB9xlDmQ=')
+            de = translator.detect_lang(reply)
+            re = translator.speak(reply[1:], de)
+            with open('/srv/www/mp.wx/web_pages/static/t/tmp.mp3', 'wb') as fd:
+                fd.write(re)
+            reply = 'http://wx-1196398119.ap-southeast-1.elb.amazonaws.com/static/t/tmp.mp3'
+        else:
+
+            translator = Translator('kylewang', 'R9nZ+mKTzSfFsB2nC2q+Owh1iRTuYaVAGiUXB9xlDmQ=')
+            de = translator.detect_lang(reply)
+            if de == 'en':
+                des = 'zh'
+            else:
+                des = 'en'
+            re = translator.get_translations(reply, de, des, 8)
+            if len(re) > 0:
+                jj = json.loads(json.dumps(re))
+                for it in jj['Translations']:
+                    reply = reply + '\n' + it['TranslatedText'] + '\t[' + str(it['MatchDegree']) + ']'
 	gen_dict['Content'] = reply
 	gen_dict['CreateTime'] = str(int(time.time()))
 
+	#gen_dict['MsgType'] = 'transfer_customer_service'
+	gen_dict['MsgType'] = 'text'
+
+	return generate_xml(gen_dict)
+
+
+def wx_msg_voice(roger, merc):
+	"""
+	should check Content
+	"""
+	gen_dict = {}
+	try:
+		gen_dict['ToUserName'], gen_dict['FromUserName'] = roger['FromUserName'], roger['ToUserName']
+		reply = roger['MediaId']
+	except KeyError:
+		return ''
+
+        access = wx_token.wx_token(merc)
+        gen_dict['Content'] = 'http://file.api.weixin.qq.com/cgi-bin/media/get?access_token=%s&media_id=%s'%(access, reply)
+	gen_dict['CreateTime'] = str(int(time.time()))
+
+	#gen_dict['MsgType'] = 'transfer_customer_service'
 	gen_dict['MsgType'] = 'text'
 
 	return generate_xml(gen_dict)
@@ -152,6 +224,8 @@ def wx_msg_news_member(merc, roger):
                 desc = '%s %s\n%s' % (uname,u'先生，您好！', desc)
             elif gen == '2':
                 desc = '%s %s\n%s' % (uname, u'女士 您好！', desc)
+        else:
+            desc = '%s' % (u'您还没有注册哦，点击马上注册吧！')
 
 
 	return wx_msg_news(roger, title = title, desc = desc, pic = pic, url = url)

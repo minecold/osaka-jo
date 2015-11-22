@@ -26,6 +26,7 @@ def wx_get_atoken(merc):
         if 'access_token' in md:
             return md['access_token'],md['expires_in']
         else:
+            print(msg)
             return None,None
 
 def wx_set_atoken(merc):

@@ -7,6 +7,7 @@ import urllib
 import json
 
 from mpWx import wxdb
+from mstranslator import Translator
 
 # It's better to set the absolutely sys path
 PAGE_PATH = '/srv/www/mp.wx/web_pages/'
@@ -37,8 +38,10 @@ class web_page:
             return self.webpage_user()
         elif self.query['protocol'] == 'merc':
             return self.webpage_merc()
+        elif self.query['protocol'] == 'trans':
+            return self.webpage_trans()
         else:
-            return ''
+            return 'no protocol'
 
     def webpage_user(self):
         if self.query['action'] == 'signup':
@@ -82,6 +85,18 @@ class web_page:
         else:
             return ''
 
+    def webpage_trans(self):
+        tfrom = self.query['query']
+        translator = Translator('kylewang','R9nZ+mKTzSfFsB2nC2q+Owh1iRTuYaVAGiUXB9xlDmQ=')
+
+        de = translator.detect_lang(tfrom)
+
+        re = translator.speak(tfrom, de)
+        with open('/tmp/tmp.wav', 'wb') as fd:
+            fd.write(re)
+
+        return re
+
     def page_signup(self):
         fp = PAGE_PATH + 'signup.html'
 
@@ -107,11 +122,15 @@ class web_page:
         uname = name.encode("utf-8")
         utel = minfo['tel'].encode("utf-8")
         uloc = minfo['loc'].encode("utf-8")
+        uaddr = minfo['addr'].encode("utf-8")
+        uweb = minfo['web'].encode("utf-8")
 
         out = out.replace('[[memid]]', uinfo['number'])
         out = out.replace('[[name]]', uname)
         out = out.replace('[[tel]]', utel)
         out = out.replace('[[loc]]', uloc)
+        out = out.replace('[[web]]',uweb)
+        out = out.replace('[[addr]]', uaddr)
 
         return out
 
@@ -119,5 +138,21 @@ class web_page:
         fp = PAGE_PATH + 'reservation.html'
         with open(fp) as f:
             out = f.read()
+        try:
+            minfo = json.load(file(MERC_DATA))[self.merc]
+        except KeyError:
+            return ''
+
+        name = minfo['name']
+        uname = name.encode("utf-8")
+        utel = minfo['tel'].encode("utf-8")
+        uloc = minfo['loc'].encode("utf-8")
+        uaddr = minfo['addr'].encode("utf-8")
+
+        out = out.replace('[[name]]', uname)
+        out = out.replace('[[tel]]', utel)
+        out = out.replace('[[loc]]', uloc)
+        out = out.replace('[[addr]]', uaddr)
+
 
         return out

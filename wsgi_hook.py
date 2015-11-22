@@ -21,20 +21,26 @@ def portal(environ, start_response):
     except IndexError:
         prot = ''
 
+    tp = 'text/html'
     if prot == 'wx':
         output = wx_process(environ)
     elif prot == 'web_pages_r':
         output = web_process(environ)
+    elif prot == 'sf':
+        output = web_process(environ)
+        tp = 'audio/vnd.wave'
     else:
         """
         protocol not supported.
         """
+        output = 'Protocol not found'
         pass 
 
     if output == '':
     	status = '404 NOT FOUND'
+        output = 'Something went wrong...Sorry'
 
-    response_headers = [('Content-type', 'text/html'),
+    response_headers = [('Content-type', tp),
                     ('Content-Length', str(len(output)))]
     start_response(status, response_headers)
 
@@ -63,7 +69,7 @@ def web_process(environ):
     try:
         merc = environ['PATH_INFO'].split('/')[2]
     except IndexError:
-        return ''
+        merc = ''
     
     wp = web_page.web_page(merc, environ)
     return wp.webpage_gen()
